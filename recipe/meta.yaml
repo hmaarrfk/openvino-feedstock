@@ -35,7 +35,7 @@ source:
     folder: thirdparty/onnx/onnx
 
 build:
-  number: 4
+  number: 5
 
 requirements:
   build:
@@ -408,6 +408,11 @@ outputs:
         - level-zero >=1.28.4
       run:
         - {{ pin_subpackage('libopenvino', exact=True) }}
+        # libze_loader.so.1 (RPATH=$ORIGIN) dlopens libze_intel_npu.so.1
+        # from $CONDA_PREFIX/lib; the plugin can't see any NPU device
+        # without this userspace driver.  intel-level-zero-npu is only
+        # built on linux-64 (matching this output's skip selector).
+        - intel-level-zero-npu  # [linux64]
     test:
       commands:
         - test -f $PREFIX/lib/openvino-{{ version_postfix }}/libopenvino_intel_npu_plugin.so              # [linux64]

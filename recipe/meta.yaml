@@ -34,7 +34,7 @@ source:
     folder: thirdparty/onnx/onnx
 
 build:
-  number: 0 
+  number: 1
 
 requirements:
   build:
@@ -375,6 +375,14 @@ outputs:
         - {{ pin_subpackage('libopenvino', exact=True) }}
       run:
         - {{ pin_subpackage('libopenvino', exact=True) }}
+        # The GPU plugin discovers the device through the OpenCL ICD loader
+        # (ocl-icd, pulled in via run_exports because the plugin links
+        # libOpenCL.so.1).  The loader is useless without an actual Intel GPU
+        # driver (NEO) registering an ICD at $PREFIX/etc/OpenCL/vendors/.
+        # Without intel-compute-runtime the plugin loads but enumerates zero
+        # devices, so `GPU` never appears in core.available_devices.  This
+        # mirrors how the NPU plugin relies on the level-zero stack.
+        - intel-compute-runtime  # [linux64]
     test:
       commands:
         - test -f $PREFIX/lib/openvino-{{ version_postfix }}/libopenvino_intel_gpu_plugin.so              # [unix]
